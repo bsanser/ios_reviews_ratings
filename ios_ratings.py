@@ -3,8 +3,6 @@ from rich import print
 from datetime import datetime
 
 
-ELVIE_ID =  '1349263624'
-
 countries=["DZ", "AO", "AI",
 "AR", "AM", "AU", "AT", "AZ", "BH", "BB", "BY", "BE", "BZ", "BM", "BO","BW", "BR", "VG", "BN", "BG", "CA","KY", "CL", "CN", "CO", "CR", "HR", "CY", "CZ", "DK", "DM", "EC", "EG",
 "SV", "EE", "FI","FR", "DE", "GH","GB", "GR", "GD","GT", "GY", "HN","HK", "HU", "IS","IN", "ID", "IE","IL", "IT", "JM", "JP", "JO", "KE", "KW", "LV", "LB","LT", "LU", "MO", "MG", "MY", 
@@ -21,10 +19,13 @@ def calculate_total_number_of_ratings(data):
 
     
 def get_country_ratings_count(app_id, country):
- r = requests.get(f'http://itunes.apple.com/lookup?id={app_id}&country={country}').json() 
- ratings_count = r['results'][0]['userRatingCount']
- if ratings_count > 0:
-  countries_with_ratings.append({"country": country, "ratings_count": ratings_count})
+ try:
+  r = requests.get(f'http://itunes.apple.com/lookup?id={app_id}&country={country}').json() 
+  ratings_count = r['results'][0]['userRatingCount']
+  if ratings_count > 0:
+    countries_with_ratings.append({"country": country, "ratings_count": ratings_count})
+ except Exception as e:
+  print(f'Country {country} raised the following exception: {e}')
 
 def get_app_info(app_id, total_ratings_count):
   r = requests.get(f'http://itunes.apple.com/lookup?id={app_id}').json() 
@@ -45,12 +46,12 @@ def get_total_ratings_count(countries_with_ratings_list):
 
 
 
-def get_countries_with_ratings_list():
+def get_countries_with_ratings_list(app_id):
   print(f'Start time: {datetime.now()}')
   print('Getting countries with ratings list')
   for country in countries:
-    get_country_ratings_count(ELVIE_ID, country)
-  
+    get_country_ratings_count(app_id, country)
   countries_with_ratings_list = get_countries_with_ratings(countries_with_ratings)
   return countries_with_ratings_list
+
 

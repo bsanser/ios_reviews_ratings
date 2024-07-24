@@ -1,30 +1,19 @@
 import requests
 from rich import print
-import pandas as pd
 from dataclasses import dataclass
-from ios_ratings import get_countries_with_ratings_list
-# from save_to_gsheets import save_to_gsheets, update_gsheets
-import logging
-logging.basicConfig(filename='cron.log', level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
+
+country_codes = ['US']
 
 APPS_DATA = {
   'ELVIE' : '1349263624',
-  'WILLOW_GO' : '1579004074',
+  'WILLOW_G0' : '1579004074',
   'WILLOW_3' : '1489872855',
   'TOMMEE_TIPPEE' : '1522124003',
   'MEDELA' : '909275386',
-  'LANSINOH_2.0' : '1480550011',
-  'LANSINOH_3.0' : '1670282806',
-  'MOMCOZY': '6473000053'
+  'LANSINOH' : '1480550011'
 }
 
-APP_ID = APPS_DATA['MOMCOZY']
-
-
-country_codes = get_countries_with_ratings_list(APP_ID)
-
-
-app_name = next(key for key, value in APPS_DATA.items() if value == APP_ID).lower()
+APP_ID = APPS_DATA['WILLOW_G0']
 
 reviews_list = []
 
@@ -59,11 +48,11 @@ def parse_reviews_data(reviews_data):
     print(f"An error occurred: {e}")
 
 def save_to_excel(df):
- df.to_excel('ios-elvie-reviews.xlsx', index = False)
+  df.to_excel('ios-elvie-reviews.xlsx', index = False)
 
 def get_reviews(country_code,app_id):
   print(f'Getting reviews for countries: {country_code}')
-  r = requests.get(f'https://itunes.apple.com/{country_code}/rss/customerreviews/page=1/id={app_id}/sortby=mostrecent/json?urlDesc=/customerreviews/id={app_id}/sortby=mostrecent/json').json()
+  r = requests.get(f'https://itunes.apple.com/{country_code}/rss/customerreviews/page={1}/id={app_id}/sortby=mostrecent/json?urlDesc=/customerreviews/id={app_id}/sortby=mostrecent/json').json()
   try:
       reviews_response = r['feed']
       attributes_list = reviews_response['link']
@@ -84,17 +73,7 @@ def get_reviews(country_code,app_id):
 def main():
   for country in country_codes:
     get_reviews(country, APP_ID)
-  print(f'Found {len(reviews_list)} reviews in total')
   formatted_reviews = parse_reviews_data(reviews_list)
-  df = pd.DataFrame(formatted_reviews)
-  sorted_by_most_recent_df = df.sort_values(by='date', ascending=False)
-  sorted_by_most_recent_df.to_excel(f'ios_{app_name}_reviews.xlsx')
-  # sorted_by_most_recent_df.to_csv(f'ios_{app_name}_reviews.csv', index=False)
-  
-  # print('Updating spreadsheet')
-  # update_gsheets(sorted_by_most_recent_df)
-  # save_to_gsheets(sorted_by_most_recent_df)
-  # save_to_excel(sorted_by_most_recent_df)
+  print(formatted_reviews)
 
 main()
-
