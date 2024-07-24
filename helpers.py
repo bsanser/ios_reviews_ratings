@@ -1,6 +1,7 @@
 import requests
 from rich import print
 from datetime import datetime
+from dataclasses import dataclass
 
 import constants as c
 
@@ -52,4 +53,33 @@ def get_total_ratings_count(countries_with_ratings_list):
   total_ratings_count = calculate_total_number_of_ratings(countries_with_ratings_list)
   return total_ratings_count
 
+@dataclass
+class Review:
+  date: str
+  country: str
+  user_rating: int
+  title: str
+  body: str
+  vote_sum: int
+  vote_count: int
+  app_version: str
 
+
+def parse_reviews_data(reviews_data):
+  parsed_reviews = []
+  try: 
+    for review_item in reviews_data:
+      review = Review (
+        date = review_item['updated']['label'].split("T")[0],
+        country =  review_item['author']['uri']['label'].split('/')[3],
+        app_version = review_item['im:version']['label'],       
+        user_rating = int(review_item['im:rating']['label']),
+        title = review_item['title']['label'],
+        body =  review_item['content']['label'],
+        vote_sum = int(review_item['im:voteSum']['label']),
+        vote_count = int(review_item['im:voteCount']['label'])  
+      )
+      parsed_reviews.append(review)
+    return(parsed_reviews)
+  except Exception as e:
+    print(f"An error occurred: {e}")
